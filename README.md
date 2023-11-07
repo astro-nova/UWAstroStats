@@ -1,1 +1,1 @@
-# stats-temp
+# Welcome to Stats 101
