@@ -14,8 +14,9 @@ Your tasks is the following:
 4. Run MCMC chains
     1. Using different covariance matrices (analytical vs. numerical)
     2. Use your own sampler and one [emcee](https://emcee.readthedocs.io/en/stable/) sampler compute the MCMC chains, and compare posteriors and speed
-    3. Bonus: Test different number of dv which are used to compute covarinace matrix, and test the correction of Hartlap/Percival factor
-    4. Bonus: Use gradient based sampler (like [numpyro](https://github.com/pyro-ppl/numpyro))
-    5. Bonus: Use [CosmoSIS](https://cosmosis.readthedocs.io/en/latest/) to compute MCMC chain
+    3. Perform [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html) data compression, run MCMC and compare to uncompressed posteriors 
+    4. Bonus: Test different number of dv which are used to compute covarinace matrix, and test the correction of Hartlap/Percival factor
+    5. Bonus: Use gradient based sampler (like [numpyro](https://github.com/pyro-ppl/numpyro))
+    6. Bonus: Use [CosmoSIS](https://cosmosis.readthedocs.io/en/latest/) to compute MCMC chain
 
 
