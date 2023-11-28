@@ -10,7 +10,7 @@ We provide you with the following:
 Your tasks is the following:
 1. Train+Test emulator using the $N$ analytical models (like [CosmoPower](https://github.com/alessiospuriomancini/cosmopower), or [Capse.jl](https://github.com/CosmologicalEmulators/Capse.jl), or your own)
 2. Compute numerical covariance matrix from the $M$ noisy $d$
-3. Compute $\chi^2$ with different number of noisy $d$ for the covariance matrix computation, correct by Hartlap/Percival factor. Check if you have a $\chi^2$ distribution with correct degrees-of-freedom.
+3. Compute $\chi^2$ with different number of noisy $d$ for the covariance matrix computation, correct by [Hartlap](https://arxiv.org/abs/astro-ph/0608064)/[Percival](https://arxiv.org/abs/2108.10402) factor. Check if you have a $\chi^2$ distribution with correct degrees-of-freedom.
 4. Run MCMC chains
     1. Using different covariance matrices (analytical vs. numerical)
     2. Use your own sampler and one [emcee](https://emcee.readthedocs.io/en/stable/) sampler compute the MCMC chains, and compare posteriors and speed
