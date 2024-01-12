@@ -120,14 +120,14 @@ def build_model(object_redshift=0.0, fixed_metallicity=None, add_duste=False,
         #And use value supplied by fixed_metallicity keyword
         model_params["logzsol"]['init'] = fixed_metallicity
 
-   # if object_redshift != 0.0:
-   #     # make sure zred is fixed
-   #     model_params["zred"]['isfree'] = False
-   #     # And set the value to the object_redshift keyword
-   #     model_params["zred"]['init'] = object_redshift
-    model_params["zred"]['isfree'] = True
-    model_params["zred"]['init'] = 0.1
-    model_params["zred"]['prior'] = priors.TopHat(mini=0,maxi=1)
+
+    # If we know the redshift 
+    model_params["zred"]['isfree'] = False
+    model_params["zred"]['init'] = object_redshift
+    # If we want to fix the redshift
+    # model_params["zred"]['isfree'] = True
+    # model_params["zred"]['init'] = 0.1
+    # model_params["zred"]['prior'] = priors.TopHat(mini=0,maxi=1)
 
     if add_duste:
         # Add dust emission (with fixed dust SED parameters)
@@ -197,7 +197,7 @@ def build_obs(objid, **kwargs):
 
     from prospect.utils.obsutils import fix_obs
 
-    with fits.open('sw_inputs.fits') as f:
+    with fits.open('data/sw_input.fits') as f:
         df = Table(f[1].data).to_pandas()
         f.close()
 
@@ -297,7 +297,7 @@ if __name__ == '__main__':
 
     #hfile = setup_h5(model=model, obs=obs, **run_params)
     ts = time.strftime("%y%b%d-%H.%M", time.localtime())
-    hfile = "{0}_{1}_result.h5".format(args.outfile, ts)
+    hfile = "output/{0}_{1}_result.h5".format(args.outfile, ts)
 
     output = fit_model(obs, model, sps, noise, **run_params)
 
