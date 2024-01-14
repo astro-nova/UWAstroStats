@@ -18,16 +18,16 @@ run_params = {'verbose': True,
               'outfile': 'demo_galphot',
               'output_pickles': False,
               # Optimization parameters
-              'do_powell': False,
-              'ftol': 0.5e-5, 'maxfev': 5000,
-              'do_levenberg': True,
-              'nmin': 10,
+            #   'do_powell': False,
+            #   'ftol': 0.5e-5, 'maxfev': 5000,
+            #   'do_levenberg': True,
+            #   'nmin': 10,
               # emcee fitting parameters
               'nwalkers': 128,
               'nburn': [16, 32, 64],
               'niter': 512,
-              'interval': 0.25,
-              'initial_disp': 0.1,
+            #   'interval': 0.25,
+            #   'initial_disp': 0.1,
               # dynesty Fitter parameters
               'nested_bound': 'multi',  # bounding method
               'nested_sample': 'unif',  # sampling method
@@ -40,6 +40,8 @@ run_params = {'verbose': True,
               # Model parameters
               'add_neb': False,
               'add_duste': False,
+              'var_redshift' : False,
+              'spec_z' : 0.0,
               # SPS parameters
               'zcontinuous': 1,
               }
@@ -130,7 +132,7 @@ def build_obs(objid, **kwargs):
     inp["wavelength"] = None
     
     # Populate other fields with default
-    inp = prospect.utils.obsutils.fix_obs(inp)
+    inp = fix_obs(inp)
     return inp
 
 
@@ -140,6 +142,7 @@ def build_obs(objid, **kwargs):
 
 def build_model(var_redshift=False, fixed_metallicity=None, add_duste=False,
                 add_neb=False, luminosity_distance=0.0, spec_z=0.0, **extras):
+    
     """Construct a model.  This method defines a number of parameter
     specification dictionaries and uses them to initialize a
     `models.sedmodel.SedModel` object.
@@ -180,8 +183,8 @@ def build_model(var_redshift=False, fixed_metallicity=None, add_duste=False,
     # Adjust model initial values (only important for optimization or emcee)
     model_params["dust2"]["init"] = 0.1
     model_params["logzsol"]["init"] = -0.3
-    model_params["tage"]["init"] = 13.
-    model_params["mass"]["init"] = 1e8
+    model_params["tage"]["init"] = 13
+    model_params["mass"]["init"] = 1e9
 
     # If we are going to be using emcee, it is useful to provide an
     # initial scale for the cloud of walkers (the default is 0.1)
@@ -193,9 +196,9 @@ def build_model(var_redshift=False, fixed_metallicity=None, add_duste=False,
     model_params["dust2"]["disp_floor"] = 0.1
 
     # adjust priors
-    model_params["dust2"]["prior"] = priors.TopHat(mini=0.0, maxi=2.0)
-    model_params["tau"]["prior"] = priors.LogUniform(mini=1e-1, maxi=10)
-    model_params["mass"]["prior"] = priors.LogUniform(mini=1e6, maxi=1e10)
+    # model_params["dust2"]["prior"] = priors.TopHat(mini=0.0, maxi=2.0)
+    # model_params["tau"]["prior"] = priors.LogUniform(mini=1e-1, maxi=10)
+    # model_params["mass"]["prior"] = priors.LogUniform(mini=1e6, maxi=1e10)
 
     # Change the model parameter specifications based on some keyword arguments
     if fixed_metallicity is not None:
@@ -282,7 +285,9 @@ if __name__ == '__main__':
     run_params["sps_libraries"] = sps.ssp.libraries
     run_params["param_file"] = __file__
 
-    print(model)
+    # Save the redshift to reconstruct later
+    if not run_params['var_redshift']:
+        run_params['spec_z'] = obs['redshift']
 
     if args.debug:
         sys.exit()
