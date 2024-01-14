@@ -37,9 +37,6 @@ run_params = {'verbose': True,
               'nested_dlogz_init': 0.05,
               'nested_weight_kwargs': {"pfrac": 1.0},
               'nested_target_n_effective': 10000,
-              # Obs data parameters
-              'objid': 0,
-              'luminosity_distance': 1e-5,  # in Mpc
               # Model parameters
               'add_neb': False,
               'add_duste': False,
@@ -180,12 +177,6 @@ def build_model(var_redshift=False, fixed_metallicity=None, add_duste=False,
     # view the parameters, their initial values, and the priors in detail.
     model_params = TemplateLibrary["parametric_sfh"]
 
-    # Add lumdist parameter.  If this is not added then the distance is
-    # controlled by the "zred" parameter and a WMAP9 cosmology.
-    if luminosity_distance > 0:
-        model_params["lumdist"] = {"N": 1, "isfree": False,
-                                   "init": luminosity_distance, "units":"Mpc"}
-
     # Adjust model initial values (only important for optimization or emcee)
     model_params["dust2"]["init"] = 0.1
     model_params["logzsol"]["init"] = -0.3
@@ -281,9 +272,6 @@ if __name__ == '__main__':
                         help="If set, make redshift a free parameter.")
     parser.add_argument('--add_duste', action="store_true",
                         help="If set, add dust emission to the model.")
-    parser.add_argument('--luminosity_distance', type=float, default=1e-5,
-                        help=("Luminosity distance in Mpc. Defaults to 10pc "
-                              "(for case of absolute mags)"))
     parser.add_argument('--objid', type=int, default=0,
                         help="zero-index row number in the table to fit.")
 
