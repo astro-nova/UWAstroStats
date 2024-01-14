@@ -1,5 +1,6 @@
 # Basic required packages you will need. You are free to install your own too.
 numpy
+scipy
 matplotlib
 astropy
 pandas
@@ -7,3 +8,4 @@ scikit-learn
 umap
 emcee
 dynesty
+tqdm
