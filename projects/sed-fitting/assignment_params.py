@@ -39,7 +39,6 @@ run_params = {'verbose': True,
               'nested_target_n_effective': 10000,
               # Obs data parameters
               'objid': 0,
-              'phottable': 'demo_photometry.dat',
               'luminosity_distance': 1e-5,  # in Mpc
               # Model parameters
               'add_neb': False,
@@ -81,9 +80,6 @@ def build_obs(objid, **kwargs):
         The object id for the row of the photomotery file to use.  Integer.
         Requires that there be an `objid` column in the ascii file.
 
-    :param phottable:
-        Name (and path) of the ascii file containing the photometry.
-
     :param luminosity_distance: (optional)
         The Johnson 2013 data are given as AB absolute magnitudes.  They can be
         turned into apparent magnitudes by supplying a luminosity distance.
@@ -93,9 +89,6 @@ def build_obs(objid, **kwargs):
     """
     # Writes your code here to read data.  Can use FITS, h5py, astropy.table,
     # sqlite, whatever.
-    # e.g.:
-    # import astropy.io.fits as pyfits
-    # catalog = pyfits.getdata(phottable)
     from astropy.io import fits
     from astropy.table import Table
     import pandas as pd
@@ -230,7 +223,6 @@ def build_model(var_redshift=False, fixed_metallicity=None, add_duste=False,
         model_params["zred"]['isfree'] = False
         model_params["zred"]['init'] = spec_z 
 
-    # 
 
     if add_duste:
         # Add dust emission (with fixed dust SED parameters)
@@ -292,8 +284,6 @@ if __name__ == '__main__':
     parser.add_argument('--luminosity_distance', type=float, default=1e-5,
                         help=("Luminosity distance in Mpc. Defaults to 10pc "
                               "(for case of absolute mags)"))
-    parser.add_argument('--phottable', type=str, default="demo_photometry.dat",
-                        help="Names of table from which to get photometry.")
     parser.add_argument('--objid', type=int, default=0,
                         help="zero-index row number in the table to fit.")
 
