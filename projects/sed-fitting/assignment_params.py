@@ -18,16 +18,16 @@ run_params = {'verbose': True,
               'outfile': 'demo_galphot',
               'output_pickles': False,
               # Optimization parameters
-              'do_powell': False,
-              'ftol': 0.5e-5, 'maxfev': 5000,
-              'do_levenberg': True,
-              'nmin': 10,
+            #   'do_powell': False,
+            #   'ftol': 0.5e-5, 'maxfev': 5000,
+            #   'do_levenberg': True,
+            #   'nmin': 10,
               # emcee fitting parameters
               'nwalkers': 128,
               'nburn': [16, 32, 64],
               'niter': 512,
-              'interval': 0.25,
-              'initial_disp': 0.1,
+            #   'interval': 0.25,
+            #   'initial_disp': 0.1,
               # dynesty Fitter parameters
               'nested_bound': 'multi',  # bounding method
               'nested_sample': 'unif',  # sampling method
@@ -37,110 +37,15 @@ run_params = {'verbose': True,
               'nested_dlogz_init': 0.05,
               'nested_weight_kwargs': {"pfrac": 1.0},
               'nested_target_n_effective': 10000,
-              # Obs data parameters
-              'objid': 0,
-              'phottable': 'demo_photometry.dat',
-              'luminosity_distance': 1e-5,  # in Mpc
               # Model parameters
               'add_neb': False,
               'add_duste': False,
+              'var_redshift' : False,
+              'spec_z' : 0.0,
               # SPS parameters
               'zcontinuous': 1,
               }
 
-# --------------
-# Model Definition
-# --------------
-
-def build_model(object_redshift=0.0, fixed_metallicity=None, add_duste=False,
-                add_neb=False, luminosity_distance=0.0, **extras):
-    """Construct a model.  This method defines a number of parameter
-    specification dictionaries and uses them to initialize a
-    `models.sedmodel.SedModel` object.
-
-    :param object_redshift:
-        If given, given the model redshift to this value.
-
-    :param add_dust: (optional, default: False)
-        Switch to add (fixed) parameters relevant for dust emission.
-
-    :param add_neb: (optional, default: False)
-        Switch to add (fixed) parameters relevant for nebular emission, and
-        turn nebular emission on.
-
-    :param luminosity_distance: (optional)
-        If present, add a `"lumdist"` parameter to the model, and set it's
-        value (in Mpc) to this.  This allows one to decouple redshift from
-        distance, and fit, e.g., absolute magnitudes (by setting
-        luminosity_distance to 1e-5 (10pc))
-    """
-    from prospect.models.templates import TemplateLibrary
-    from prospect.models import priors, sedmodel
-
-    # --- Get a basic delay-tau SFH parameter set. ---
-    # This has 5 free parameters:
-    #   "mass", "logzsol", "dust2", "tage", "tau"
-    # And two fixed parameters
-    #   "zred"=0.1, "sfh"=4
-    # See the python-FSPS documentation for details about most of these
-    # parameters.  Also, look at `TemplateLibrary.describe("parametric_sfh")` to
-    # view the parameters, their initial values, and the priors in detail.
-    model_params = TemplateLibrary["parametric_sfh"]
-
-    # Add lumdist parameter.  If this is not added then the distance is
-    # controlled by the "zred" parameter and a WMAP9 cosmology.
-    if luminosity_distance > 0:
-        model_params["lumdist"] = {"N": 1, "isfree": False,
-                                   "init": luminosity_distance, "units":"Mpc"}
-
-    # Adjust model initial values (only important for optimization or emcee)
-    model_params["dust2"]["init"] = 0.1
-    model_params["logzsol"]["init"] = -0.3
-    model_params["tage"]["init"] = 13.
-    model_params["mass"]["init"] = 1e8
-
-    # If we are going to be using emcee, it is useful to provide an
-    # initial scale for the cloud of walkers (the default is 0.1)
-    # For dynesty these can be skipped
-    model_params["mass"]["init_disp"] = 1e7
-    model_params["tau"]["init_disp"] = 3.0
-    model_params["tage"]["init_disp"] = 5.0
-    model_params["tage"]["disp_floor"] = 2.0
-    model_params["dust2"]["disp_floor"] = 0.1
-
-    # adjust priors
-    model_params["dust2"]["prior"] = priors.TopHat(mini=0.0, maxi=2.0)
-    model_params["tau"]["prior"] = priors.LogUniform(mini=1e-1, maxi=10)
-    model_params["mass"]["prior"] = priors.LogUniform(mini=1e6, maxi=1e10)
-
-    # Change the model parameter specifications based on some keyword arguments
-    if fixed_metallicity is not None:
-        # make it a fixed parameter
-        model_params["logzsol"]["isfree"] = False
-        #And use value supplied by fixed_metallicity keyword
-        model_params["logzsol"]['init'] = fixed_metallicity
-
-
-    # If we know the redshift 
-    model_params["zred"]['isfree'] = False
-    model_params["zred"]['init'] = object_redshift
-    # If we want to fix the redshift
-    # model_params["zred"]['isfree'] = True
-    # model_params["zred"]['init'] = 0.1
-    # model_params["zred"]['prior'] = priors.TopHat(mini=0,maxi=1)
-
-    if add_duste:
-        # Add dust emission (with fixed dust SED parameters)
-        model_params.update(TemplateLibrary["dust_emission"])
-
-    if add_neb:
-        # Add nebular emission (with fixed parameters)
-        model_params.update(TemplateLibrary["nebular"])
-
-    # Now instantiate the model using this new dictionary of parameter specifications
-    model = sedmodel.SedModel(model_params)
-
-    return model
 
 # --------------
 # Observational Data
@@ -174,9 +79,6 @@ def build_obs(objid, **kwargs):
         The object id for the row of the photomotery file to use.  Integer.
         Requires that there be an `objid` column in the ascii file.
 
-    :param phottable:
-        Name (and path) of the ascii file containing the photometry.
-
     :param luminosity_distance: (optional)
         The Johnson 2013 data are given as AB absolute magnitudes.  They can be
         turned into apparent magnitudes by supplying a luminosity distance.
@@ -186,9 +88,6 @@ def build_obs(objid, **kwargs):
     """
     # Writes your code here to read data.  Can use FITS, h5py, astropy.table,
     # sqlite, whatever.
-    # e.g.:
-    # import astropy.io.fits as pyfits
-    # catalog = pyfits.getdata(phottable)
     from astropy.io import fits
     from astropy.table import Table
     import pandas as pd
@@ -233,9 +132,104 @@ def build_obs(objid, **kwargs):
     inp["wavelength"] = None
     
     # Populate other fields with default
-    inp = prospect.utils.obsutils.fix_obs(inp)
+    inp = fix_obs(inp)
     return inp
-    return obs
+
+
+# --------------
+# Model Definition
+# --------------
+
+def build_model(var_redshift=False, fixed_metallicity=None, add_duste=False,
+                add_neb=False, luminosity_distance=0.0, spec_z=0.0, **extras):
+    
+    """Construct a model.  This method defines a number of parameter
+    specification dictionaries and uses them to initialize a
+    `models.sedmodel.SedModel` object.
+
+    :param var_redshift:
+        If True, allow redshift to vary. Otherwise, use known spec-z. 
+
+    :param add_dust: (optional, default: False)
+        Switch to add (fixed) parameters relevant for dust emission.
+
+    :param add_neb: (optional, default: False)
+        Switch to add (fixed) parameters relevant for nebular emission, and
+        turn nebular emission on.
+
+    :param luminosity_distance: (optional)
+        If present, add a `"lumdist"` parameter to the model, and set it's
+        value (in Mpc) to this.  This allows one to decouple redshift from
+        distance, and fit, e.g., absolute magnitudes (by setting
+        luminosity_distance to 1e-5 (10pc))
+
+    : param spec_z: (optional)
+        If var_redshift is False, known spectroscopic redshift from `build_obs`
+        is input here
+    """
+    from prospect.models.templates import TemplateLibrary
+    from prospect.models import priors, sedmodel
+
+    # --- Get a basic delay-tau SFH parameter set. ---
+    # This has 5 free parameters:
+    #   "mass", "logzsol", "dust2", "tage", "tau"
+    # And two fixed parameters
+    #   "zred"=0.1, "sfh"=4
+    # See the python-FSPS documentation for details about most of these
+    # parameters.  Also, look at `TemplateLibrary.describe("parametric_sfh")` to
+    # view the parameters, their initial values, and the priors in detail.
+    model_params = TemplateLibrary["parametric_sfh"]
+
+    # Adjust model initial values (only important for optimization or emcee)
+    model_params["dust2"]["init"] = 0.1
+    model_params["logzsol"]["init"] = -0.3
+    model_params["tage"]["init"] = 13
+    model_params["mass"]["init"] = 1e9
+
+    # If we are going to be using emcee, it is useful to provide an
+    # initial scale for the cloud of walkers (the default is 0.1)
+    # For dynesty these can be skipped
+    model_params["mass"]["init_disp"] = 1e7
+    model_params["tau"]["init_disp"] = 3.0
+    model_params["tage"]["init_disp"] = 5.0
+    model_params["tage"]["disp_floor"] = 2.0
+    model_params["dust2"]["disp_floor"] = 0.1
+
+    # adjust priors
+    # model_params["dust2"]["prior"] = priors.TopHat(mini=0.0, maxi=2.0)
+    # model_params["tau"]["prior"] = priors.LogUniform(mini=1e-1, maxi=10)
+    # model_params["mass"]["prior"] = priors.LogUniform(mini=1e6, maxi=1e10)
+
+    # Change the model parameter specifications based on some keyword arguments
+    if fixed_metallicity is not None:
+        # make it a fixed parameter
+        model_params["logzsol"]["isfree"] = False
+        #And use value supplied by fixed_metallicity keyword
+        model_params["logzsol"]['init'] = fixed_metallicity
+
+
+    # If we know the redshift 
+    if var_redshift:
+        model_params["zred"]['isfree'] = True
+        model_params["zred"]['init'] = 0.1
+        model_params["zred"]['prior'] = priors.TopHat(mini=0,maxi=1)
+    else:
+        model_params["zred"]['isfree'] = False
+        model_params["zred"]['init'] = spec_z 
+
+
+    if add_duste:
+        # Add dust emission (with fixed dust SED parameters)
+        model_params.update(TemplateLibrary["dust_emission"])
+
+    if add_neb:
+        # Add nebular emission (with fixed parameters)
+        model_params.update(TemplateLibrary["nebular"])
+
+    # Now instantiate the model using this new dictionary of parameter specifications
+    model = sedmodel.SedModel(model_params)
+
+    return model
 
 # --------------
 # SPS Object
@@ -260,8 +254,12 @@ def build_noise(**extras):
 
 def build_all(**kwargs):
 
-    return (build_obs(**kwargs), build_model(**kwargs),
-            build_sps(**kwargs), build_noise(**kwargs))
+    obs = build_obs(**kwargs)
+    model = build_model(spec_z=obs['redshift'], **kwargs)
+    sps = build_sps(**kwargs)
+    noise_model = build_noise(**kwargs)
+
+    return obs, model, sps, noise_model
 
 
 if __name__ == '__main__':
@@ -269,17 +267,14 @@ if __name__ == '__main__':
     # - Parser with default arguments -
     parser = prospect_args.get_parser()
     # - Add custom arguments -
-    parser.add_argument('--object_redshift', type=float, default=0.0,
-                        help=("Redshift for the model"))
+    # parser.add_argument('--object_redshift', type=float, default=0.0,
+    #                     help=("Redshift for the model"))
     parser.add_argument('--add_neb', action="store_true",
                         help="If set, add nebular emission in the model (and mock).")
+    parser.add_argument('--var_redshift', action="store_true",  
+                        help="If set, make redshift a free parameter.")
     parser.add_argument('--add_duste', action="store_true",
                         help="If set, add dust emission to the model.")
-    parser.add_argument('--luminosity_distance', type=float, default=1e-5,
-                        help=("Luminosity distance in Mpc. Defaults to 10pc "
-                              "(for case of absolute mags)"))
-    parser.add_argument('--phottable', type=str, default="demo_photometry.dat",
-                        help="Names of table from which to get photometry.")
     parser.add_argument('--objid', type=int, default=0,
                         help="zero-index row number in the table to fit.")
 
@@ -290,7 +285,9 @@ if __name__ == '__main__':
     run_params["sps_libraries"] = sps.ssp.libraries
     run_params["param_file"] = __file__
 
-    print(model)
+    # Save the redshift to reconstruct later
+    if not run_params['var_redshift']:
+        run_params['spec_z'] = obs['redshift']
 
     if args.debug:
         sys.exit()
