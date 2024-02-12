@@ -1,6 +1,6 @@
 # Welcome to Stats 101
 
-[some description of the course, modules, e.g.]
+This is the official repository for the UW reading course PHYS 788, Statistical Tools for Astronomers. Here you will find the specific information and assignments for each project as well as necessary data.
 
 ## Projects
 
