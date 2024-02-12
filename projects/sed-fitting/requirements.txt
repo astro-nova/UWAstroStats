@@ -5,6 +5,7 @@ matplotlib
 astropy
 pandas
 scikit-learn
+jupyter
 umap
 emcee
 dynesty
